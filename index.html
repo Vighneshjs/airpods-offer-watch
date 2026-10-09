@@ -39,7 +39,7 @@
     <section class="retailers" id="retailers" aria-label="Retailer comparison"></section>
     <section class="notes" aria-label="How to read this page">
       <div><h2>What counts as an offer?</h2><p>Verified stock and compulsory fees, with eligible HDFC/SBI instant discounts. Cashback, exchange and reward points are excluded. No-cost EMI requires verified charges and terms.</p></div>
-      <div><h2>Saved cloud status</h2><p>GitHub runs the monitor while your laptop is off. Scheduled runs may be delayed or dropped. This page refreshes the saved report; it does not check retailer pages or handle credentials.</p><p><a href="https://github.com/Vighneshjs/airpods-price-monitor/actions" target="_blank" rel="noopener noreferrer">View monitoring workflow</a></p></div>
+      <div><h2>Saved cloud status</h2><p>Checks run on GitHub without your laptop. This page shows the last saved check; it does not establish that the recurring schedule is firing. Scheduled runs may be delayed or dropped. Refreshing this page does not start a retailer check.</p><p><a href="https://github.com/Vighneshjs/airpods-price-monitor/actions" target="_blank" rel="noopener noreferrer">View monitoring workflow</a></p></div>
     </section>
     <footer><span id="updated">No saved report yet</span><span>Confirm the final price and card eligibility at checkout.</span></footer>
   </main>
@@ -83,7 +83,7 @@
           terms.textContent = 'Listed amounts appear below. Delivery, fees and card offers are unverified.';
         } else {
           priceLabel.textContent = 'Verified payable total'; total.textContent = 'No verified total';
-          terms.textContent = 'Awaiting verified stock and price';
+          terms.textContent = 'No current price verified in the saved report.';
         }
         const coverage = document.createElement('p'); coverage.className = 'coverage';
         const count = fact && Number.isInteger(fact.known_regions) ? fact.known_regions : 0;
@@ -121,7 +121,11 @@
       const age = Date.now() - timestamp;
       const fresh = age >= -60000 && age < 15 * 60 * 1000;
       const complete = report.coverage.complete === true;
-      put('statusBadge', !fresh ? 'Report is stale' : report.status === 'attention' ? 'Needs attention' : report.status === 'preview' ? 'Preview check' : complete ? 'Recent complete check' : known ? 'Partial check' : 'Checks unverified');
+      const hasListedPrice = report.retailers.some(item =>
+        item.listed_price_verified === true && validTotal(item.listed_price) ||
+        Array.isArray(item.regions) && item.regions.some(region => region.listed_price_verified === true && validTotal(region.listed_price)));
+      const attentionLabel = known === 0 ? hasListedPrice ? 'Listed prices only' : 'Price checks unverified' : 'Needs attention';
+      put('statusBadge', !fresh ? 'Report is stale' : report.status === 'attention' ? attentionLabel : report.status === 'preview' ? 'Preview check' : complete ? 'Recent complete check' : known ? 'Partial check' : 'Checks unverified');
       if (fresh && complete && report.status === 'ok') badge.className = 'tag good';
       put('lastChecked', 'Last check: ' + when(report.checked_at)); put('updated', 'Report saved ' + when(report.checked_at));
       const best = report.best_offer;
@@ -130,9 +134,11 @@
         put('winnerNote', best.retailer + ' · ' + payment(best) + (report.under_limit === true ? ' · Below price limit' : ' · At or above price limit'));
       } else {
         put('winner', complete ? 'None verified in stock' : 'No verified total yet');
-        put('winnerNote', complete ? 'No qualifying in-stock total was found in this report.' : 'Other checks remain unverified.');
+        put('winnerNote', complete ? 'No qualifying in-stock total was found in this report.' : hasListedPrice ? 'Listed prices appear below; delivery and payable totals remain unverified.' : 'The last check could not verify a current retailer price.');
       }
       if (!fresh) put('notice', 'This report is stale. Inspect the GitHub workflow before relying on monitoring.');
+      else if (report.status === 'attention' && known === 0 && !hasListedPrice) put('notice', 'The last cloud check saved a report, but no current retailer price was verified. Price tracking is incomplete, so this report cannot establish a qualifying offer.');
+      else if (report.status === 'attention' && known === 0) put('notice', 'Listed prices were read, but delivery, compulsory fees or payment eligibility remain unverified. These amounts are not verified payable totals or qualifying offers.');
       else if (report.status === 'attention') put('notice', 'The latest check needs attention. Inspect the private monitoring workflow for details.');
       else if (!complete) put('notice', 'Comparison covers ' + known + ' of ' + total + ' checks. Other retailer or region results are unverified.');
     }
