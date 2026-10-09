@@ -105,8 +105,8 @@
       const age = Date.now() - timestamp;
       const fresh = age >= -60000 && age < 15 * 60 * 1000;
       const complete = report.coverage.complete === true;
-      put('statusBadge', !fresh ? 'Report is stale' : report.status === 'preview' ? 'Preview check' : complete ? 'Recent complete check' : known ? 'Partial check' : 'Checks unverified');
-      if (fresh && complete && report.status !== 'preview') badge.className = 'tag good';
+      put('statusBadge', !fresh ? 'Report is stale' : report.status === 'attention' ? 'Needs attention' : report.status === 'preview' ? 'Preview check' : complete ? 'Recent complete check' : known ? 'Partial check' : 'Checks unverified');
+      if (fresh && complete && report.status === 'ok') badge.className = 'tag good';
       put('lastChecked', 'Last check: ' + when(report.checked_at)); put('updated', 'Report saved ' + when(report.checked_at));
       const best = report.best_offer;
       if (best && names.includes(best.retailer) && validTotal(best.best_total)) {
@@ -117,6 +117,7 @@
         put('winnerNote', complete ? 'No qualifying in-stock total was found in this report.' : 'Other checks remain unverified.');
       }
       if (!fresh) put('notice', 'This report is stale. Inspect the GitHub workflow before relying on monitoring.');
+      else if (report.status === 'attention') put('notice', 'The latest check needs attention. Inspect the private monitoring workflow for details.');
       else if (!complete) put('notice', 'Comparison covers ' + known + ' of ' + total + ' checks. Other retailer or region results are unverified.');
     }
     async function refresh() {
