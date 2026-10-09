@@ -1,53 +1,96 @@
-name: Remove AirPods watch
+name: Remove published AirPods dashboard
 on:
   push:
     branches: [main]
     paths: [.github/workflows/cleanup.yml]
 permissions:
-  contents: write
+  contents: read
   actions: write
   pages: write
+  id-token: write
+concurrency:
+  group: github-pages-cleanup
+  cancel-in-progress: false
 jobs:
-  cleanup:
+  remove-publication:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
+    environment:
+      name: github-pages
     env:
       GITHUB_TOKEN: ${{ github.token }}
       EXPECTED_REPOSITORY: Vighneshjs/airpods-offer-watch
     steps:
-      - name: Remove saved state, publication and previous runs
+      - name: Stop other public workflow runs
+        continue-on-error: true
         run: |
           python - <<'PY'
           import json, os, urllib.request, urllib.error
           repo = os.environ['EXPECTED_REPOSITORY']
-          if repo not in {'Vighneshjs/airpods-price-monitor','Vighneshjs/airpods-offer-watch'} or os.environ['GITHUB_REPOSITORY'] != repo:
+          if repo != 'Vighneshjs/airpods-offer-watch' or os.environ['GITHUB_REPOSITORY'] != repo:
               raise SystemExit('Cleanup repository mismatch.')
           own = int(os.environ['GITHUB_RUN_ID'])
           class NoRedirect(urllib.request.HTTPRedirectHandler):
               def redirect_request(self, *args, **kwargs): return None
           opener = urllib.request.build_opener(NoRedirect)
-          def api(method, path, allow_missing=False):
-              request = urllib.request.Request('https://api.github.com/repos/' + repo + path, method=method, headers={'Authorization':'Bearer ' + os.environ['GITHUB_TOKEN'], 'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'})
+          def api(method, path, allowed=()):
+              request = urllib.request.Request('https://api.github.com/repos/' + repo + path, method=method, headers={'Authorization':'Bearer ' + os.environ['GITHUB_TOKEN'], 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28'})
               try:
                   with opener.open(request, timeout=20) as response:
                       body = response.read()
                       return json.loads(body) if body else None
               except urllib.error.HTTPError as error:
-                  if allow_missing and error.code == 404: return None
-                  raise SystemExit('Cleanup API request failed with HTTP ' + str(error.code) + ' for ' + path)
+                  if error.code in allowed: return None
+                  raise SystemExit('Cleanup API request failed with HTTP ' + str(error.code) + '.')
           runs = api('GET', '/actions/runs?per_page=100').get('workflow_runs', [])
+          count = 0
           for run in runs:
               if run['id'] != own and run['status'] in {'queued','in_progress','waiting','requested','pending'}:
-                  api('POST', '/actions/runs/' + str(run['id']) + '/cancel', True)
-          print('Other workflow runs stopped.')
-          if repo.endswith('/airpods-price-monitor'):
-              api('DELETE', '/git/refs/heads/monitor-state', True)
-              print('Private monitor-state branch removed.')
-          else:
-              api('DELETE', '/pages', True)
-              print('GitHub Pages publication removed.')
+                  api('POST', '/actions/runs/' + str(run['id']) + '/cancel', (404,409))
+                  count += 1
+          print('Other public workflow cancellations requested:', count)
+          PY
+      - name: Stage an empty publication
+        run: |
+          mkdir _site
+          touch _site/.nojekyll
+          test ! -e _site/index.html
+          test ! -e _site/status.json
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Replace the old dashboard with no public pages or data
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Remove previous completed public runs and artifacts
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request, urllib.error
+          repo = os.environ['EXPECTED_REPOSITORY']
+          if repo != 'Vighneshjs/airpods-offer-watch' or os.environ['GITHUB_REPOSITORY'] != repo:
+              raise SystemExit('Cleanup repository mismatch.')
+          own = int(os.environ['GITHUB_RUN_ID'])
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, *args, **kwargs): return None
+          opener = urllib.request.build_opener(NoRedirect)
+          def api(method, path, allowed=()):
+              request = urllib.request.Request('https://api.github.com/repos/' + repo + path, method=method, headers={'Authorization':'Bearer ' + os.environ['GITHUB_TOKEN'], 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28'})
+              try:
+                  with opener.open(request, timeout=20) as response:
+                      body = response.read()
+                      return json.loads(body) if body else None
+              except urllib.error.HTTPError as error:
+                  if error.code in allowed: return None
+                  raise SystemExit('Cleanup API request failed with HTTP ' + str(error.code) + '.')
+          runs = []
+          for page in range(1, 101):
+              batch = api('GET', '/actions/runs?per_page=100&page=' + str(page)).get('workflow_runs', [])
+              runs.extend(batch)
+              if len(batch) < 100: break
+          count = 0
           for run in runs:
               if run['id'] != own and run['status'] == 'completed':
-                  api('DELETE', '/actions/runs/' + str(run['id']), True)
-          print('Previous completed workflow runs, logs and artifacts removed.')
+                  api('DELETE', '/actions/runs/' + str(run['id']), (404,))
+                  count += 1
+          print('Previous public runs/logs/artifacts removed:', count)
           PY
