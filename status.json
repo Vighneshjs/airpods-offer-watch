@@ -2,8 +2,8 @@
   "schema_version": 1,
   "product_name": "Apple AirPods Pro 3",
   "threshold_inr": "22900.00",
-  "checked_at": null,
-  "status": "unknown",
+  "checked_at": "2026-10-09T08:32:04.876154+00:00",
+  "status": "attention",
   "coverage": {
     "known_pairs": 0,
     "total_pairs": 4,
