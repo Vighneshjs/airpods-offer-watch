@@ -2,7 +2,7 @@
   "schema_version": 1,
   "product_name": "Apple AirPods Pro 3",
   "threshold_inr": "22900.00",
-  "checked_at": "2026-10-09T08:32:04.876154+00:00",
+  "checked_at": "2026-10-09T08:40:44.528114+00:00",
   "status": "attention",
   "coverage": {
     "known_pairs": 0,
@@ -19,6 +19,9 @@
       "known_regions": 0,
       "total_regions": 2,
       "best_offer": null,
+      "listed_price": null,
+      "listed_price_verified": false,
+      "listed_price_varies": false,
       "regions": [
         {
           "region": "Region 1",
@@ -27,7 +30,9 @@
           "best_total": null,
           "bank": null,
           "card_type": null,
-          "no_cost_emi": false
+          "no_cost_emi": false,
+          "listed_price": null,
+          "listed_price_verified": false
         },
         {
           "region": "Region 2",
@@ -36,7 +41,9 @@
           "best_total": null,
           "bank": null,
           "card_type": null,
-          "no_cost_emi": false
+          "no_cost_emi": false,
+          "listed_price": null,
+          "listed_price_verified": false
         }
       ]
     },
@@ -46,6 +53,9 @@
       "known_regions": 0,
       "total_regions": 2,
       "best_offer": null,
+      "listed_price": null,
+      "listed_price_verified": false,
+      "listed_price_varies": false,
       "regions": [
         {
           "region": "Region 1",
@@ -54,7 +64,9 @@
           "best_total": null,
           "bank": null,
           "card_type": null,
-          "no_cost_emi": false
+          "no_cost_emi": false,
+          "listed_price": null,
+          "listed_price_verified": false
         },
         {
           "region": "Region 2",
@@ -63,7 +75,9 @@
           "best_total": null,
           "bank": null,
           "card_type": null,
-          "no_cost_emi": false
+          "no_cost_emi": false,
+          "listed_price": null,
+          "listed_price_verified": false
         }
       ]
     }
