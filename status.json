@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "product_name": "Apple AirPods Pro 3",
+  "threshold_inr": "22900.00",
+  "checked_at": null,
+  "status": "unknown",
+  "coverage": {
+    "known_pairs": 0,
+    "total_pairs": 4,
+    "complete": false
+  },
+  "best_offer": null,
+  "under_limit": false,
+  "alert_eligible": false,
+  "retailers": [
+    {
+      "retailer": "Amazon",
+      "url": "https://www.amazon.in/dp/B0FQFJBBVY",
+      "known_regions": 0,
+      "total_regions": 2,
+      "best_offer": null,
+      "regions": [
+        {
+          "region": "Region 1",
+          "known": false,
+          "stock": "unknown",
+          "best_total": null,
+          "bank": null,
+          "card_type": null,
+          "no_cost_emi": false
+        },
+        {
+          "region": "Region 2",
+          "known": false,
+          "stock": "unknown",
+          "best_total": null,
+          "bank": null,
+          "card_type": null,
+          "no_cost_emi": false
+        }
+      ]
+    },
+    {
+      "retailer": "Flipkart",
+      "url": "https://www.flipkart.com/apple-airpods-pro-3-bluetooth/p/itm64bdd83a7f0c6",
+      "known_regions": 0,
+      "total_regions": 2,
+      "best_offer": null,
+      "regions": [
+        {
+          "region": "Region 1",
+          "known": false,
+          "stock": "unknown",
+          "best_total": null,
+          "bank": null,
+          "card_type": null,
+          "no_cost_emi": false
+        },
+        {
+          "region": "Region 2",
+          "known": false,
+          "stock": "unknown",
+          "best_total": null,
+          "bank": null,
+          "card_type": null,
+          "no_cost_emi": false
+        }
+      ]
+    }
+  ]
+}
